@@ -1,1 +1,13 @@
-<p>tracker works!</p>
+<div *ngIf="authService.isAuthenticated$ | async">
+    <h2>Your Smoke-Free Progress</h2>
+    <div class="progress-container">
+      <div class="days-counter">
+        <span class="number">{{ daysSmokeFree$ | async }}</span>
+        <span class="label">DAYS</span>
+      </div>
+    </div>
+    <button (click)="resetCounter()">Reset Counter</button>
+  </div>
+  <div *ngIf="!(authService.isAuthenticated$ | async)">
+    <p>Please log in to track your progress.</p>
+  </div>
