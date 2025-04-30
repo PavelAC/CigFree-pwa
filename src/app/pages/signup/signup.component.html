@@ -1,0 +1,9 @@
+<h2>Sign Up</h2>
+<app-auth-form 
+  [isSignUp]="true"
+  (submitForm)="onSignUp($event)"
+  [isLoading]="isLoading">
+</app-auth-form>
+<p>
+  Already have an account? <a routerLink="/login">Log in</a>
+</p>
