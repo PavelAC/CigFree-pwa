@@ -23,15 +23,17 @@ export class InstallPromptComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('beforeinstallprompt', this.handleInstallPrompt);
+    window.removeEventListener('beforeinstallprompt', this.handleInstallPromptBound);
   }
 
   private checkInstallStatus() {
     this.isStandalone = window.matchMedia('(display-mode: standalone)').matches;
   }
 
+  private handleInstallPromptBound = this.handleInstallPrompt.bind(this);
+
   private listenForInstallPrompt() {
-    window.addEventListener('beforeinstallprompt', this.handleInstallPrompt);
+    window.addEventListener('beforeinstallprompt', this.handleInstallPromptBound);
   }
 
   @HostListener('window:beforeinstallprompt', ['$event'])
