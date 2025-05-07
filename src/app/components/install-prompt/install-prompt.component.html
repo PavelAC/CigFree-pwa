@@ -1,1 +1,10 @@
-<p>install-prompt works!</p>
+<div class="install-prompt" *ngIf="showPrompt && canInstall">
+    <div class="prompt-content">
+      <p>Install this app for better experience</p>
+      <div class="prompt-actions">
+        <button class="install-btn" (click)="install()">Install</button>
+        <button class="dismiss-btn" (click)="dismiss()">Later</button>
+      </div>
+    </div>
+  </div>
+  

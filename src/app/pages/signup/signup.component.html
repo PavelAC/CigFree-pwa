@@ -1,9 +1,13 @@
-<h2>Sign Up</h2>
-<app-auth-form 
-  [isSignUp]="true"
-  (submitForm)="onSignUp($event)"
-  [isLoading]="isLoading">
-</app-auth-form>
-<p>
-  Already have an account? <a routerLink="/login">Log in</a>
-</p>
+<div class="wrapper">
+  <div class="flip-card__back">
+    <h2 class="title">Sign Up</h2>
+    <app-auth-form 
+      [isSignUp]="true"
+      (submitForm)="onSignUp($event)"
+      [isLoading]="isLoading">
+    </app-auth-form>
+    <p class="flip-card__form">
+      Already have an account? <a routerLink="/login">Log in</a>
+    </p>
+  </div>
+</div>

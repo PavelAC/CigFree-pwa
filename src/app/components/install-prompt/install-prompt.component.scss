@@ -1,0 +1,52 @@
+.install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    max-width: 300px;
+    padding: 20px;
+    background-color: var(--bg-color, #fff);
+    border: 2px solid var(--main-color, #323232);
+    box-shadow: 4px 4px var(--main-color, #323232);
+    border-radius: 8px;
+    z-index: 1000;
+    animation: fadeIn 0.4s ease-in-out;
+  }
+  
+  .prompt-content p {
+    font-size: 16px;
+    color: var(--font-color, #323232);
+    margin-bottom: 15px;
+  }
+  
+  .prompt-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .install-btn,
+  .dismiss-btn {
+    flex: 1;
+    height: 40px;
+    border: 2px solid var(--main-color, #323232);
+    background-color: var(--bg-color, #fff);
+    box-shadow: 4px 4px var(--main-color, #323232);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--font-color, #323232);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  
+  .install-btn:active,
+  .dismiss-btn:active {
+    box-shadow: none;
+    transform: translate(3px, 3px);
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  

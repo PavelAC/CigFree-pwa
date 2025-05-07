@@ -3,17 +3,7 @@ import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-install-prompt',
-  template: `
-    <div class="install-prompt" *ngIf="showPrompt && canInstall">
-      <div class="prompt-content">
-        <p>Install this app for better experience</p>
-        <div class="prompt-actions">
-          <button class="install-btn" (click)="install()">Install</button>
-          <button class="dismiss-btn" (click)="dismiss()">Later</button>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './install-prompt.component.html',
   styleUrls: ['./install-prompt.component.scss'],
   standalone: true,
   imports: [CommonModule]
@@ -77,7 +67,6 @@ export class InstallPromptComponent implements OnInit, OnDestroy {
   dismiss() {
     localStorage.setItem('installPromptDismissed', 'true');
     this.resetPrompt();
-    // Show again after 7 days
     setTimeout(() => {
       localStorage.removeItem('installPromptDismissed');
     }, 7 * 24 * 60 * 60 * 1000);
