@@ -57,18 +57,55 @@ export class TrackerService {
       return Math.max(0, Math.floor(diffInMs / (1000 * 60 * 60 * 24)));
     }
   
+
+    private readonly OFFLINE_DATA_KEY = 'offline_tracker_data';
     async resetCounter(): Promise<void> {
       const user = this.authService.getCurrentUser();
       if (!user?.uid) return;
-  
-      try {
-        const userRef = doc(this.firestore, `users/${user.uid}`);
-        await updateDoc(userRef, {
-          smokeFreeSince: new Date()
+    
+      if (!navigator.onLine) {
+        const storedData = localStorage.getItem(this.OFFLINE_DATA_KEY);
+        const actions = storedData ? JSON.parse(storedData) : [];
+        
+        actions.push({
+          type: 'resetCounter',
+          timestamp: new Date().toISOString()
         });
+        
+        localStorage.setItem(this.OFFLINE_DATA_KEY, JSON.stringify(actions));
+        return;
+      }
+    
+      const userRef = doc(this.firestore, `users/${user.uid}`);
+      await updateDoc(userRef, {
+        smokeFreeSince: new Date()
+      });
+      await this.syncOfflineActions();
+    }
+
+    private async syncOfflineActions(): Promise<void> {
+      const storedData = localStorage.getItem(this.OFFLINE_DATA_KEY);
+      const actions = storedData ? JSON.parse(storedData) : [];
+      
+      if (!actions.length) return;
+    
+      try {
+        const user = this.authService.getCurrentUser();
+        if (!user?.uid) return;
+    
+        const userRef = doc(this.firestore, `users/${user.uid}`);
+        
+        for (const action of actions) {
+          if (action.type === 'resetCounter') {
+            await updateDoc(userRef, {
+              smokeFreeSince: new Date(action.timestamp)
+            });
+          }
+        }
+        
+        localStorage.removeItem(this.OFFLINE_DATA_KEY);
       } catch (error) {
-        console.error('Error resetting counter:', error);
-        throw error;
+        console.error('Failed to sync offline actions:', error);
       }
     }
 }
