@@ -10,4 +10,7 @@
   </div>
   <div *ngIf="!(authService.isAuthenticated$ | async)">
     <p>Please log in to track your progress.</p>
+    <button>
+      <a routerLink="/login">Log in</a>
+    </button>
   </div>
