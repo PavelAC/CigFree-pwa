@@ -1,16 +1,19 @@
-<div *ngIf="authService.isAuthenticated$ | async">
-    <h2>Your Smoke-Free Progress</h2>
+<div  class="container card">
+  <div *ngIf="authService.isAuthenticated$ | async">
+    <h2 class="title">Your Smoke-Free Progress</h2>
     <div class="progress-container">
       <div class="days-counter">
         <span class="number">{{ daysSmokeFree$ | async }}</span>
         <span class="label">DAYS</span>
       </div>
     </div>
-    <button (click)="resetCounter()">Reset Counter</button>
+    <button class="btn btn-primary" (click)="resetCounter()">Reset Counter</button>
   </div>
+  
   <div *ngIf="!(authService.isAuthenticated$ | async)">
     <p>Please log in to track your progress.</p>
-    <button>
-      <a routerLink="/login">Log in</a>
+    <button class="flip-card__btn">
+      <a routerLink="/login" class="btn-link">Log in</a>
     </button>
   </div>
+</div>
