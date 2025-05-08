@@ -151,7 +151,7 @@ export class NotificationTriggerComponent {
     this.result = null;
     
     try {
-      // Check if notifications are permitted
+
       if (!('Notification' in window)) {
         throw new Error('This browser does not support notifications');
       }
@@ -163,7 +163,6 @@ export class NotificationTriggerComponent {
         }
       }
       
-      // Build notification options
       const options: NotificationOptions = {
         body: this.notificationBody || undefined,
       };
@@ -172,7 +171,6 @@ export class NotificationTriggerComponent {
         options.icon = this.notificationIcon;
       }
       
-      // Send notification
       const success = await this.notificationService.showNotification(
         this.notificationTitle,
         options

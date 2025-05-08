@@ -54,13 +54,21 @@ import { NotificationTriggerComponent } from "./components/notification/notifica
 })
 export class AppComponent {
   constructor(public notificationService: NotificationService) {}
+  title= 'cigfree';
 
   async ngOnInit() {
+    this.notificationService.onlineStatus$.subscribe(isOnline => {
+      console.log('Connectivity changed:', isOnline);
+      
+      // If we come back online, check for pending notifications
+      if (isOnline) {
+        this.checkPendingOperations();
+      }
+    });
     try {
       const hasPermission = await this.notificationService.requestPermission();
       
       if (hasPermission) {
-        // Only show welcome notification if permission is granted
         this.notificationService.showNotification('Welcome!', {
           body: 'Thanks for using our app',
           icon: 'icons/icon-192x192.png'
@@ -73,5 +81,18 @@ export class AppComponent {
     this.notificationService.onlineStatus$.subscribe(isOnline => {
       console.log('Connectivity changed:', isOnline);
     });
+  }
+  private checkPendingOperations(): void {
+    // Check if there are any stored operations in localStorage
+    const trackerActions = localStorage.getItem('tracker_offline_actions');
+    
+    if (trackerActions && JSON.parse(trackerActions).length > 0) {
+      // If there are pending tracker operations, show a notification
+      this.notificationService.showNotification('Sync Required', {
+        body: 'You have pending changes that need to be synchronized. Please visit the tracker page.',
+        icon: 'icons/icon-192x192.png',
+        requireInteraction: true
+      });
+    }
   }
 }
