@@ -13,13 +13,37 @@ bootstrapApplication(AppComponent, appConfig)
     if ('serviceWorker' in navigator && !isDevMode()) {
       console.log('Attempting SW registration...');
       
+      // First register Angular's service worker
       navigator.serviceWorker.register('./ngsw-worker.js')
-        .then(reg => {
-          console.debug('Service Worker registered:', reg);
-          // Optional: Periodically check for updates
-          setInterval(() => reg.update(), 60 * 60 * 1000);
+        .then(angularReg => {
+          console.debug('Angular Service Worker registered:', angularReg);
+          
+          // Then register custom service worker
+          return navigator.serviceWorker.register('/custom-sw.js', {
+            scope: '/',
+            type: 'classic'
+          }).then(customReg => {
+            console.debug('Custom Service Worker registered:', customReg);
+            
+            // Set up periodic updates (every hour)
+            setInterval(() => {
+              angularReg.update();
+              customReg.update();
+            }, 60 * 60 * 1000);
+
+            return { angularReg, customReg };
+          });
         })
-        .catch(err => console.warn('Registration failed:', err));
+        .then(({ angularReg, customReg }) => {
+          navigator.serviceWorker.addEventListener('error', (event) => {
+            console.error('Service Worker error occurred');
+          });
+          
+          navigator.serviceWorker.addEventListener('message', event => {
+            console.log('Received message from SW:', event.data);
+          });
+        })
+        .catch(err => console.warn('Service Worker registration failed:', err));
     }
   })
-  .catch(err => console.error('Bootstrap failed:', err));
+  .catch(err => console.error('Application bootstrap failed:', err));
