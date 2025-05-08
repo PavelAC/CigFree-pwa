@@ -1,3 +1,14 @@
+<div *ngIf="(offlineService.isOffline$ | async)" class="offline-banner">
+  You are currently offline. Some features may be limited.
+</div>
+<div *ngIf="(offlineService.isOnline$ | async)" class="online-banner">
+  You are currently online
+  <app-notification-button></app-notification-button>
+</div>
 
+<div class="container">
+    <app-notification-trigger></app-notification-trigger>
+  </div>
+  
 <router-outlet />
 <app-install-prompt></app-install-prompt>
