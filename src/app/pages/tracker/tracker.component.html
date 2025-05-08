@@ -8,6 +8,7 @@
       </div>
     </div>
     <button class="btn btn-primary" (click)="resetCounter()">Reset Counter</button>
+    <button class="btn btn-primary" (click)="addOneDay()">No Smoke today</button>
   </div>
   
   <div *ngIf="!(authService.isAuthenticated$ | async)">

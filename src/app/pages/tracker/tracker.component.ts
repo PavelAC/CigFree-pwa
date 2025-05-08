@@ -32,10 +32,8 @@ export class TrackerComponent {
     
     try {
       await this.trackerService.addOneDay();
-      // Success message could be added here
     } catch (error) {
       console.error('Failed to add day:', error);
-      // Error handling could be added here
     } finally {
       this.isAddingDay = false;
     }
