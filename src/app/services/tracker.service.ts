@@ -94,18 +94,109 @@ export class TrackerService {
         if (!user?.uid) return;
     
         const userRef = doc(this.firestore, `users/${user.uid}`);
+        const docSnap = await getDoc(userRef);
         
+        if (!docSnap.exists()) return;
+        
+        // Process actions in chronological order
+        actions.sort((a: { timestamp: string }, b: { timestamp: string }) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        
+        // Get current smoke-free date
+        let userData = docSnap.data() as UserProfile;
+        let currentDate = userData.smokeFreeSince instanceof Timestamp 
+          ? userData.smokeFreeSince.toDate() 
+          : userData.smokeFreeSince 
+            ? new Date(userData.smokeFreeSince) 
+            : new Date();
+        
+        // Apply each action
         for (const action of actions) {
           if (action.type === 'resetCounter') {
-            await updateDoc(userRef, {
-              smokeFreeSince: new Date(action.timestamp)
-            });
+            // For reset, just use the timestamp directly
+            currentDate = new Date(action.timestamp);
+          } else if (action.type === 'addDay') {
+            // For add day, subtract one day from the current date
+            currentDate.setDate(currentDate.getDate() - 1);
           }
         }
+        
+        // Update with final calculated date
+        await updateDoc(userRef, {
+          smokeFreeSince: currentDate
+        });
         
         localStorage.removeItem(this.OFFLINE_DATA_KEY);
       } catch (error) {
         console.error('Failed to sync offline actions:', error);
+      }
+    
+        
+        localStorage.removeItem(this.OFFLINE_DATA_KEY);
+      } catch (error: unknown) {
+        console.error('Failed to sync offline actions:', error);
+      }
+    
+
+    async addOneDay(): Promise<boolean> {
+      const user = this.authService.getCurrentUser();
+      if (!user?.uid) return false;
+    
+      if (!navigator.onLine) {
+        // Handle offline mode using the same approach as resetCounter
+        const storedData = localStorage.getItem(this.OFFLINE_DATA_KEY);
+        const actions = storedData ? JSON.parse(storedData) : [];
+        
+        // Get the current date and subtract one day to store as action
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        actions.push({
+          type: 'addDay',
+          timestamp: new Date().toISOString()
+        });
+        
+        localStorage.setItem(this.OFFLINE_DATA_KEY, JSON.stringify(actions));
+        return true;
+      }
+      
+      try {
+        // Get the current user profile
+        const userRef = doc(this.firestore, `users/${user.uid}`);
+        const docSnap = await getDoc(userRef);
+        
+        if (!docSnap.exists()) return false;
+        
+        const userData = docSnap.data() as UserProfile;
+        
+        if (!userData.smokeFreeSince) {
+          // If no smoke-free date exists, set it to yesterday
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          await updateDoc(userRef, {
+            smokeFreeSince: yesterday
+          });
+          
+          return true;
+        } else {
+          // Get the current quit date
+          const smokeFreeSince = userData.smokeFreeSince instanceof Timestamp 
+            ? userData.smokeFreeSince.toDate() 
+            : new Date(userData.smokeFreeSince);
+            
+          // Subtract one more day (move the date back)
+          smokeFreeSince.setDate(smokeFreeSince.getDate() - 1);
+          
+          // Update in Firestore
+          await updateDoc(userRef, {
+            smokeFreeSince: smokeFreeSince
+          });
+          
+          return true;
+        }
+      } catch (error: unknown) {
+        console.error('Failed to add one day:', error);
+        return false;
       }
     }
 }

@@ -14,6 +14,7 @@ import { RouterModule } from '@angular/router';
 })
 export class TrackerComponent {
   daysSmokeFree$: Observable<number>;
+  isAddingDay = false; // Flag to show loading state
 
   constructor(
     private trackerService: TrackerService,
@@ -24,5 +25,19 @@ export class TrackerComponent {
 
   resetCounter() {
     this.trackerService.resetCounter();
+  }
+  
+  async addOneDay() {
+    this.isAddingDay = true;
+    
+    try {
+      await this.trackerService.addOneDay();
+      // Success message could be added here
+    } catch (error) {
+      console.error('Failed to add day:', error);
+      // Error handling could be added here
+    } finally {
+      this.isAddingDay = false;
+    }
   }
 }
