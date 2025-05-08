@@ -8,14 +8,14 @@ import {
   User,
   updateProfile,
 } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
-  browserLocalPersistence,
-  browserSessionPersistence,
-  setPersistence
-} from 'firebase/auth';
-import { FirestoreService } from './firestore.service';
+    browserLocalPersistence,
+    browserSessionPersistence,
+    setPersistence
+  } from 'firebase/auth';
 
 export interface UserProfile {
   uid: string;
@@ -29,8 +29,7 @@ export interface UserProfile {
 })
 export class AuthService {
   private auth = inject(Auth);
-  private firestoreService = inject(FirestoreService);
-  
+  private firestore = inject(Firestore);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
   public isAuthenticated$: Observable<boolean> = this.currentUser$.pipe(
@@ -64,6 +63,7 @@ export class AuthService {
     }
   }
   
+
   async signUp(email: string, password: string, displayName?: string): Promise<User> {
     try {
       const credential = await createUserWithEmailAndPassword(this.auth, email, password);
@@ -106,6 +106,8 @@ export class AuthService {
 
   private async createUserProfile(user: User, additionalData?: Partial<UserProfile>): Promise<void> {
     if (!user.uid) return;
+
+    const userRef = doc(this.firestore, `users/${user.uid}`);
     
     const userData: UserProfile = {
       uid: user.uid,
@@ -116,8 +118,7 @@ export class AuthService {
     };
 
     try {
-      // Use FirestoreService instead of direct Firestore access
-      await this.firestoreService.updateDocument('users', user.uid, userData);
+      await setDoc(userRef, userData);
     } catch (error) {
       console.error('Error creating user profile:', error);
       throw error;
@@ -126,8 +127,19 @@ export class AuthService {
 
   async getUserProfileDoc(uid: string): Promise<UserProfile | null> {
     try {
-      // Use FirestoreService for document retrieval with offline support
-      return await this.firestoreService.getDocument<UserProfile>('users', uid);
+      const userRef = doc(this.firestore, `users/${uid}`);
+      const docSnap = await getDoc(userRef);
+      
+      if (!docSnap.exists()) return null;
+      
+      const data = docSnap.data();
+      // Convert any Firestore timestamps to Date objects
+      return {
+        ...data as UserProfile,
+        smokeFreeSince: data['smokeFreeSince'] && typeof data['smokeFreeSince'].toDate === 'function' 
+          ? data['smokeFreeSince'].toDate() 
+          : data['smokeFreeSince']
+      };
     } catch (error) {
       console.error('Error getting user profile:', error);
       return null;
@@ -144,4 +156,5 @@ export class AuthService {
       });
     });
   }
+
 }

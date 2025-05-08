@@ -38,7 +38,6 @@ import { InstallPromptComponent } from './components/install-prompt/install-prom
 import { NotificationService } from './services/notification.service';
 import { NotificationButtonComponent } from "./components/notification/notification-button.component";
 import { NotificationTriggerComponent } from "./components/notification/notification-trigger";
-import { OfflineService } from './services/offline.service';
 
 @Component({
   selector: 'app-root',
@@ -54,7 +53,7 @@ import { OfflineService } from './services/offline.service';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  constructor(protected notificationService: NotificationService, protected offlineService: OfflineService) {}
+  constructor(public notificationService: NotificationService) {}
 
   async ngOnInit() {
     try {
