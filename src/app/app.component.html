@@ -1,3 +1,16 @@
+<div *ngIf="(notificationService.onlineStatus$ | async) === false" 
+class="offline-banner">
+You are currently offline
+</div>
+<div *ngIf="(notificationService.onlineStatus$ | async) === true"
+class="online-banner">
+You are currently online
+<app-notification-button></app-notification-button>
+</div>
 
+<div class="container">
+    <app-notification-trigger></app-notification-trigger>
+  </div>
+  
 <router-outlet />
 <app-install-prompt></app-install-prompt>

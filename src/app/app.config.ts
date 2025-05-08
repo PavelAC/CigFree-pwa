@@ -6,6 +6,7 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyC4d-LldAIB68LlV6eiPkn7mFQFpnsuuuY",
@@ -17,19 +18,25 @@ export const firebaseConfig = {
   measurementId: "G-ZZ8XHHZDGL"
 };
 
+export const environment = {
+  production: false,
+  vapidPublicKey: 'BMWSM3_SRYpByYU92CqyAh0ldQ5QsfQMf_-i6BU-tGF4dn3EWHCrZXuQvr9CXyfVBp8Lmi5pSBx13iINRPFQ6zU'
+}
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
    
-        // Firebase providers
-        provideFirebaseApp(() => initializeApp(firebaseConfig)),
-        provideAuth(() => getAuth()),
-        provideFirestore(() => getFirestore()), 
-        provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+    provideHttpClient(withFetch()),
+    // Firebase providers
+    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore()), 
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ]
 };
