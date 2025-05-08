@@ -199,7 +199,6 @@ export class TrackerService {
     }
   }
 
-  // This method is crucial for offline synchronization
   public async syncOfflineActions(): Promise<void> {
     console.log('Checking for offline actions to sync...');
     
@@ -231,11 +230,9 @@ export class TrackerService {
         console.log('User document does not exist, cannot sync');
         return;
       }
-      
-      // Process actions in chronological order
+
       actions.sort((a: {timestamp: string}, b: {timestamp: string}) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       
-      // Get current smoke-free date
       const userData = docSnap.data() as UserProfile;
       let currentDate = userData.smokeFreeSince instanceof Timestamp 
         ? userData.smokeFreeSince.toDate() 
@@ -245,29 +242,23 @@ export class TrackerService {
       
       console.log('Current smoke-free date before sync:', currentDate);
       
-      // Apply each action
       for (const action of actions) {
         console.log(`Processing offline action: ${action.type} from ${action.timestamp}`);
         if (action.type === 'resetCounter') {
-          // For reset, just use the timestamp directly
           currentDate = new Date(action.timestamp);
         } else if (action.type === 'addDay') {
-          // For add day, subtract one day from the current date
           currentDate.setDate(currentDate.getDate() - 1);
         }
       }
       
       console.log('New smoke-free date after sync:', currentDate);
       
-      // Update with final calculated date
       await updateDoc(userRef, {
         smokeFreeSince: currentDate
       });
       
-      // Clear offline data
       localStorage.removeItem(this.OFFLINE_DATA_KEY);
       
-      // Show sync notification
       this.notificationService.showNotification(
         'Offline Changes Synced', 
         { 
