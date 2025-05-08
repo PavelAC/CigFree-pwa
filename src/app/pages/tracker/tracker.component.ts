@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { TrackerService } from '../../services/tracker.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -13,27 +13,37 @@ import { RouterModule } from '@angular/router';
   styleUrl: './tracker.component.scss'
 })
 export class TrackerComponent {
-  daysSmokeFree$: Observable<number>;
-  isAddingDay = false; // Flag to show loading state
+  private trackerService = inject(TrackerService);
+  protected authService = inject(AuthService);
+  
+  private additionalDays = new BehaviorSubject<number>(0);
+  
+  daysSmokeFree$: Observable<number> = combineLatest([
+    this.trackerService.smokeFreeDays$,
+    this.additionalDays
+  ]).pipe(
+    map(([baseDays, extraDays]) => baseDays + extraDays)
+  );
+  
+  isAddingDay = false;
 
-  constructor(
-    private trackerService: TrackerService,
-    public authService: AuthService
-  ) {
-    this.daysSmokeFree$ = this.trackerService.smokeFreeDays$;
-  }
+  constructor() {}
 
   resetCounter() {
     this.trackerService.resetCounter();
+    this.additionalDays.next(0);
   }
   
   async addOneDay() {
     this.isAddingDay = true;
     
     try {
+      this.additionalDays.next(this.additionalDays.value + 1);
+      
       await this.trackerService.addOneDay();
     } catch (error) {
       console.error('Failed to add day:', error);
+      this.additionalDays.next(Math.max(0, this.additionalDays.value - 1));
     } finally {
       this.isAddingDay = false;
     }
