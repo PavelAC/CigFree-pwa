@@ -7,8 +7,25 @@
         <span class="label">DAYS</span>
       </div>
     </div>
-    <button class="btn btn-primary" (click)="resetCounter()">Reset Counter</button>
-    <button class="btn btn-primary" (click)="addOneDay()">No Smoke today</button>
+    <div class="button-container">
+      <!-- Add One Day button -->
+      <button 
+        class="add-day-btn" 
+        (click)="addOneDay()" 
+        [disabled]="isAddingDay || isResetting">
+        <span *ngIf="!isAddingDay">Add 1 Day</span>
+        <span *ngIf="isAddingDay">Adding...</span>
+      </button>
+      
+      <!-- Reset button -->
+      <button 
+        class="reset-btn" 
+        (click)="resetCounter()"
+        [disabled]="isAddingDay || isResetting">
+        <span *ngIf="!isResetting">Reset Counter</span>
+        <span *ngIf="isResetting">Resetting...</span>
+      </button>
+    </div>
   </div>
   
   <div *ngIf="!(authService.isAuthenticated$ | async)">

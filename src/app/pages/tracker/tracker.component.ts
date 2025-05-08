@@ -26,12 +26,22 @@ export class TrackerComponent {
   );
   
   isAddingDay = false;
+  isResetting = false;
 
   constructor() {}
 
-  resetCounter() {
-    this.trackerService.resetCounter();
-    this.additionalDays.next(0);
+  async resetCounter() {
+    this.isResetting = true;
+    
+    try {
+      this.additionalDays.next(0);
+      
+      await this.trackerService.resetCounter();
+    } catch (error) {
+      console.error('Error resetting counter:', error);
+    } finally {
+      this.isResetting = false;
+    }
   }
   
   async addOneDay() {

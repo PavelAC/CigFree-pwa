@@ -59,29 +59,34 @@ export class TrackerService {
   
 
     private readonly OFFLINE_DATA_KEY = 'offline_tracker_data';
-    async resetCounter(): Promise<void> {
-      const user = this.authService.getCurrentUser();
-      if (!user?.uid) return;
+
+async resetCounter(): Promise<boolean> {
+  const user = this.authService.getCurrentUser();
+  if (!user?.uid) return false;
+
+  if (!navigator.onLine) {
+    const actions = [{
+      type: 'resetCounter',
+      timestamp: new Date().toISOString()
+    }];
     
-      if (!navigator.onLine) {
-        const storedData = localStorage.getItem(this.OFFLINE_DATA_KEY);
-        const actions = storedData ? JSON.parse(storedData) : [];
-        
-        actions.push({
-          type: 'resetCounter',
-          timestamp: new Date().toISOString()
-        });
-        
-        localStorage.setItem(this.OFFLINE_DATA_KEY, JSON.stringify(actions));
-        return;
-      }
+    localStorage.setItem(this.OFFLINE_DATA_KEY, JSON.stringify(actions));
+    return true;
+  }
+
+  try {
+    const userRef = doc(this.firestore, `users/${user.uid}`);
     
-      const userRef = doc(this.firestore, `users/${user.uid}`);
-      await updateDoc(userRef, {
-        smokeFreeSince: new Date()
-      });
-      await this.syncOfflineActions();
-    }
+    await updateDoc(userRef, {
+      smokeFreeSince: new Date()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to reset counter:', error);
+    return false;
+  }
+}
 
     private async syncOfflineActions(): Promise<void> {
       const storedData = localStorage.getItem(this.OFFLINE_DATA_KEY);
