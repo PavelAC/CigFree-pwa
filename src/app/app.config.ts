@@ -2,7 +2,7 @@ import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angul
 import { provideRouter } from '@angular/router';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence, initializeFirestore, persistentLocalCache, persistentSingleTabManager, persistentMultipleTabManager } from '@angular/fire/firestore';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -37,31 +37,38 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideAuth(() => getAuth()),
     provideFirestore(() => {
-      const firestore = getFirestore();
-      
-      // Enable persistence with better error handling
-      enableMultiTabIndexedDbPersistence(firestore)
-        .catch(error => {
-          if (error.code === 'failed-precondition') {
-            // Multiple tabs open, persistence can only be enabled in one tab at a time
-            console.warn('Firebase persistence failed: Multiple tabs open. Falling back to memory persistence.');
-            
-            // Try single-tab persistence as fallback
-            return enableIndexedDbPersistence(firestore)
-              .catch(err => {
-                console.error('Failed to enable IndexedDB persistence:', err);
-              });
-          } else if (error.code === 'unimplemented') {
-            console.warn('Firebase persistence not supported in this browser. Some offline features will be limited.');
-          } else {
-            console.error('Unknown persistence error:', error);
-          }
+      try {
+        const firestore = initializeFirestore(initializeApp(firebaseConfig), {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+          })
         });
-      
-      return firestore;
+        
+        console.log('Firestore initialized with multi-tab persistence');
+        return firestore;
+      } catch (multiTabError) {
+        console.warn('Multi-tab persistence failed:', multiTabError);
+        
+        try {
+          const firestore = initializeFirestore(initializeApp(firebaseConfig), {
+            localCache: persistentLocalCache({
+              tabManager: persistentSingleTabManager({})
+            })
+          });
+          
+          console.log('Firestore initialized with single-tab persistence');
+          return firestore;
+        } catch (singleTabError) {
+          console.error('Could not initialize Firestore with persistence:', singleTabError);
+          
+          const firestore = getFirestore();
+          console.warn('Using Firestore without explicit persistence configuration');
+          return firestore;
+        }
+      }
     }),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: true, // Enable in both dev and production for testing
+      enabled: true,
       registrationStrategy: 'registerImmediately'
     }),
   ]
