@@ -2,11 +2,11 @@ import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angul
 import { provideRouter } from '@angular/router';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence, initializeFirestore, persistentLocalCache, persistentSingleTabManager, persistentMultipleTabManager } from '@angular/fire/firestore';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyC4d-LldAIB68LlV6eiPkn7mFQFpnsuuuY",
@@ -29,14 +29,47 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
    
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi()
+    ),
     // Firebase providers
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()), 
+    provideFirestore(() => {
+      try {
+        const firestore = initializeFirestore(initializeApp(firebaseConfig), {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+          })
+        });
+        
+        console.log('Firestore initialized with multi-tab persistence');
+        return firestore;
+      } catch (multiTabError) {
+        console.warn('Multi-tab persistence failed:', multiTabError);
+        
+        try {
+          const firestore = initializeFirestore(initializeApp(firebaseConfig), {
+            localCache: persistentLocalCache({
+              tabManager: persistentSingleTabManager({})
+            })
+          });
+          
+          console.log('Firestore initialized with single-tab persistence');
+          return firestore;
+        } catch (singleTabError) {
+          console.error('Could not initialize Firestore with persistence:', singleTabError);
+          
+          const firestore = getFirestore();
+          console.warn('Using Firestore without explicit persistence configuration');
+          return firestore;
+        }
+      }
+    }),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      enabled: true,
+      registrationStrategy: 'registerImmediately'
     }),
   ]
 };
