@@ -3,12 +3,15 @@ import { SwPush } from '@angular/service-worker';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../app.config';
-import { Firestore, collection, addDoc, deleteDoc, doc, query, where, getDocs } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
+import { OfflineService } from './offline.service';
+import { FirestoreService } from './firestore.service';
 
 export interface PushSubscriptionWithUser extends PushSubscriptionJSON {
   userId?: string;
   createdAt?: number;
+  id?: string;
+  docId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,14 +22,15 @@ export class NotificationService {
   private subscriptionStatus = new BehaviorSubject<boolean>(false);
   public subscriptionStatus$ = this.subscriptionStatus.asObservable();
   
-  private firestore: Firestore = inject(Firestore);
   private auth: Auth = inject(Auth);
   private user$ = user(this.auth);
+  private firestoreService = inject(FirestoreService);
   
   constructor(
     private swPush: SwPush,
     private ngZone: NgZone,
-    private http: HttpClient
+    private http: HttpClient,
+    private offlineService: OfflineService
   ) {
     this.setupConnectivityListeners();
     this.setupPushListeners();
@@ -171,7 +175,7 @@ export class NotificationService {
         serverPublicKey: environment.vapidPublicKey
       });
       
-      // Save subscription to Firestore
+      // Save subscription to Firestore using FirestoreService
       await this.saveSubscriptionToFirestore(subscription);
       
       this.subscriptionStatus.next(true);
@@ -199,7 +203,7 @@ export class NotificationService {
         return true;
       }
       
-      // Remove from Firestore first
+      // Remove from Firestore first using FirestoreService
       await this.removeSubscriptionFromFirestore(subscription);
       
       // Then unsubscribe
@@ -212,7 +216,7 @@ export class NotificationService {
     }
   }
   
-  // Save subscription to Firestore
+  // Save subscription to Firestore using FirestoreService
   private async saveSubscriptionToFirestore(subscription: PushSubscription): Promise<void> {
     try {
       const currentUser = await firstValueFrom(this.user$);
@@ -228,15 +232,16 @@ export class NotificationService {
         createdAt: Date.now()
       };
       
-      // Check if subscription already exists
-      const subscriptionsRef = collection(this.firestore, 'pushSubscriptions');
-      const q = query(subscriptionsRef, where('endpoint', '==', subscriptionData.endpoint));
-      const querySnapshot = await getDocs(q);
+      // Use firestoreService to first check if subscription exists by querying
+      const existingSubscriptions = await this.firestoreService.queryDocuments(
+        'pushSubscriptions',
+        [{ field: 'endpoint', operator: '==', value: subscriptionData.endpoint }]
+      );
       
-      if (querySnapshot.empty) {
-        // Add new subscription
-        await addDoc(subscriptionsRef, subscriptionData);
-        console.log('Subscription saved to Firestore');
+      if (existingSubscriptions.length === 0) {
+        // Add new subscription using firestore service for offline support
+        await this.firestoreService.createDocument('pushSubscriptions', subscriptionData);
+        console.log('Subscription saved to Firestore with offline support');
       } else {
         console.log('Subscription already exists in Firestore');
       }
@@ -246,22 +251,25 @@ export class NotificationService {
     }
   }
   
-  // Remove subscription from Firestore
+  // Remove subscription from Firestore using FirestoreService
   private async removeSubscriptionFromFirestore(subscription: PushSubscription): Promise<void> {
     try {
-      const subscriptionsRef = collection(this.firestore, 'pushSubscriptions');
-      const q = query(subscriptionsRef, where('endpoint', '==', subscription.endpoint));
-      const querySnapshot = await getDocs(q);
+      // Query for subscriptions with this endpoint
+      const existingSubscriptions = await this.firestoreService.queryDocuments<PushSubscriptionWithUser>(
+        'pushSubscriptions',
+        [{ field: 'endpoint', operator: '==', value: subscription.endpoint }]
+      );
       
-      if (!querySnapshot.empty) {
-        // Delete subscription document
-        const deletePromises = querySnapshot.docs.map(document => 
-          deleteDoc(doc(this.firestore, 'pushSubscriptions', document.id))
-        );
-        
-        await Promise.all(deletePromises);
-        console.log('Subscription removed from Firestore');
+      // Delete each subscription document
+      for (const sub of existingSubscriptions) {
+        // We need the document ID, which might be in a custom field depending on your implementation
+        const docId = sub['id'] || sub['docId'];
+        if (docId) {
+          await this.firestoreService.deleteDocument('pushSubscriptions', docId);
+        }
       }
+      
+      console.log(`Removed ${existingSubscriptions.length} subscription(s) from Firestore with offline support`);
     } catch (error) {
       console.error('Error removing subscription from Firestore:', error);
       throw new Error('Failed to remove notification subscription');
@@ -271,6 +279,32 @@ export class NotificationService {
   // Toggle push notification subscription
   public async togglePushNotifications(): Promise<boolean> {
     const isCurrentlySubscribed = this.subscriptionStatus.value;
+    
+    // Check if online using the offlineService
+    const isOnline = await firstValueFrom(this.offlineService.isOnline$);
+    
+    // If offline, show a notification and defer the action
+    if (!isOnline) {
+      await this.showNotification(
+        'Offline Mode',
+        {
+          body: `This action will be completed when you're back online`,
+          icon: 'icons/icon-192x192.png'
+        }
+      );
+      
+      // The firestoreService will automatically queue operations when offline
+      try {
+        if (isCurrentlySubscribed) {
+          return await this.unsubscribeFromPush();
+        } else {
+          return !!(await this.subscribeToPush());
+        }
+      } catch (error) {
+        console.error('Failed to toggle push notifications in offline mode:', error);
+        return false;
+      }
+    }
     
     try {
       if (isCurrentlySubscribed) {

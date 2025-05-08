@@ -2,11 +2,11 @@ import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angul
 import { provideRouter } from '@angular/router';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from '@angular/fire/firestore';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyC4d-LldAIB68LlV6eiPkn7mFQFpnsuuuY",
@@ -29,14 +29,40 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
    
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi()
+    ),
     // Firebase providers
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()), 
+    provideFirestore(() => {
+      const firestore = getFirestore();
+      
+      // Enable persistence with better error handling
+      enableMultiTabIndexedDbPersistence(firestore)
+        .catch(error => {
+          if (error.code === 'failed-precondition') {
+            // Multiple tabs open, persistence can only be enabled in one tab at a time
+            console.warn('Firebase persistence failed: Multiple tabs open. Falling back to memory persistence.');
+            
+            // Try single-tab persistence as fallback
+            return enableIndexedDbPersistence(firestore)
+              .catch(err => {
+                console.error('Failed to enable IndexedDB persistence:', err);
+              });
+          } else if (error.code === 'unimplemented') {
+            console.warn('Firebase persistence not supported in this browser. Some offline features will be limited.');
+          } else {
+            console.error('Unknown persistence error:', error);
+          }
+        });
+      
+      return firestore;
+    }),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      enabled: true, // Enable in both dev and production for testing
+      registrationStrategy: 'registerImmediately'
     }),
   ]
 };
