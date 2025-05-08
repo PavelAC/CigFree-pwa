@@ -1,1 +1,299 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global Styles - Mobile First Approach */
+
+/* CSS Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Variables */
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --text-color: #2c3e50;
+    --text-color-secondary: #7f8c8d;
+    --background-color: #ecf0f1;
+    --background-gradient: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    --card-background: #fff;
+    --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+    --border-radius: 8px;
+    --box-shadow: 4px 4px var(--secondary-color);
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+    --font-family: 'Roboto', Arial, sans-serif;
+    --container-width: 100%;
+  }
+  
+  /* Typography */
+  html {
+    font-size: 16px;
+    font-family: var(--font-family);
+    line-height: 1.5;
+    color: var(--text-color);
+  }
+  
+  body {
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: var(--spacing-md);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  p {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Layout */
+  .container {
+    width: var(--container-width);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+  }
+  
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -var(--spacing-sm);
+  }
+  
+  .col {
+    width: 100%;
+    padding: 0 var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  /* Cards */
+  .card {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: none;
+  }
+  
+  /* Forms */
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+  }
+  
+  .form-control {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--card-background);
+    border: 2px solid var(--secondary-color);
+    border-radius: var(--border-radius);
+    transition: border-color 0.2s ease;
+  }
+  
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+  
+  .form-text {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+  
+  /* Buttons */
+  .btn {
+    display: inline-block;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-primary {
+    background-color: var(--primary-color);
+    box-shadow: 2px 2px var(--secondary-color);
+  }
+  
+  .btn-primary:hover {
+    background-color: #2579d8;
+  }
+  
+  .btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary-color);
+    text-decoration: underline;
+    box-shadow: none;
+  }
+  
+  .btn-link:hover {
+    color: #2579d8;
+    transform: none;
+  }
+  
+  /* Utilities */
+  .text-center {
+    text-align: center;
+  }
+  
+  .text-right {
+    text-align: right;
+  }
+  
+  .mt-1 { margin-top: var(--spacing-xs); }
+  .mt-2 { margin-top: var(--spacing-sm); }
+  .mt-3 { margin-top: var(--spacing-md); }
+  .mt-4 { margin-top: var(--spacing-lg); }
+  .mt-5 { margin-top: var(--spacing-xl); }
+  
+  .mb-1 { margin-bottom: var(--spacing-xs); }
+  .mb-2 { margin-bottom: var(--spacing-sm); }
+  .mb-3 { margin-bottom: var(--spacing-md); }
+  .mb-4 { margin-bottom: var(--spacing-lg); }
+  .mb-5 { margin-bottom: var(--spacing-xl); }
+  
+  /* App-specific styles */
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+  }
+  
+  /* Media Queries - Tablet */
+  @media (min-width: 768px) {
+    :root {
+      --container-width: 720px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+    }
+    
+    .col-md-6 {
+      width: 50%;
+    }
+    
+    .col-md-4 {
+      width: 33.333333%;
+    }
+    
+    .col-md-8 {
+      width: 66.666667%;
+    }
+  }
+  
+  /* Media Queries - Desktop */
+  @media (min-width: 992px) {
+    :root {
+      --container-width: 960px;
+    }
+    
+    h1 {
+      font-size: 2.25rem;
+    }
+    
+    h2 {
+      font-size: 2rem;
+    }
+    
+    .col-lg-3 {
+      width: 25%;
+    }
+    
+    .col-lg-4 {
+      width: 33.333333%;
+    }
+    
+    .col-lg-6 {
+      width: 50%;
+    }
+    
+    .col-lg-8 {
+      width: 66.666667%;
+    }
+    
+    .col-lg-9 {
+      width: 75%;
+    }
+  }
+  
+  /* Media Queries - Large Desktop */
+  @media (min-width: 1200px) {
+    :root {
+      --container-width: 1140px;
+    }
+  }
