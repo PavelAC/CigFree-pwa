@@ -52,7 +52,14 @@
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": "ngsw-config.json"
+              "serviceWorker": "ngsw-config.json",
+              "assets": [
+                {
+                  "glob": "custom-sw.js",
+                  "input": "src",
+                  "output": "/"
+                }
+              ]
             },
             "development": {
               "optimization": false,
