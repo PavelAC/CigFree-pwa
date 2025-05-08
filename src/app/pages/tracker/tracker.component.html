@@ -9,7 +9,7 @@
     </div>
     <div class="button-container">
       <button 
-        class="add-day-btn" 
+        class="btn primary-btn" 
         (click)="addOneDay()" 
         [disabled]="isAddingDay || isResetting">
         <span *ngIf="!isAddingDay">Add 1 Day</span>
@@ -17,7 +17,7 @@
       </button>
       
       <button 
-        class="reset-btn" 
+        class="btn primary-btn" 
         (click)="resetCounter()"
         [disabled]="isAddingDay || isResetting">
         <span *ngIf="!isResetting">Reset Counter</span>
